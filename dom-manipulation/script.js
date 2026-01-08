@@ -137,58 +137,42 @@ syncNotice.id = "syncNotice";
 document.body.prepend(syncNotice);
 
 const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
-const SYNC_INTERVAL = 15000; // 15 seconds
 
-async function fetchServerQuotes() {
+async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
     const data = await response.json();
 
-    // Simulate server quote format
+    // Simulate server-side quotes
     return data.slice(0, 5).map(item => ({
       text: item.title,
       category: "Server"
     }));
   } catch (error) {
-    console.error("Server fetch failed:", error);
+    console.error("Error fetching server quotes:", error);
     return [];
   }
 }
 
 async function syncWithServer() {
-  const serverQuotes = await fetchServerQuotes();
+  const serverQuotes = await fetchQuotesFromServer();
 
   if (serverQuotes.length === 0) return;
 
-  const localQuotesJSON = JSON.stringify(quotes);
-  const serverQuotesJSON = JSON.stringify(serverQuotes);
+  const localData = JSON.stringify(quotes);
+  const serverData = JSON.stringify(serverQuotes);
 
-  if (localQuotesJSON !== serverQuotesJSON) {
-    // Conflict detected → server wins
+  // Conflict detected → server takes precedence
+  if (localData !== serverData) {
     quotes = serverQuotes;
     localStorage.setItem("quotes", JSON.stringify(quotes));
 
     populateCategories();
     filterQuotes();
 
-    showSyncMessage("⚠️ Data conflict resolved. Server data applied.");
+    showSyncMessage("⚠️ Conflict detected. Server data applied.");
   }
 }
 
-function showSyncMessage(message) {
-  syncNotice.textContent = message;
-  syncNotice.style.background = "#ffefc1";
-  syncNotice.style.padding = "10px";
-  syncNotice.style.marginBottom = "10px";
+setInterval(syncWithServer, 15000);
 
-  setTimeout(() => {
-    syncNotice.textContent = "";
-  }, 4000);
-}
-
-const manualSyncBtn = document.createElement("button");
-manualSyncBtn.textContent = "Manual Sync with Server";
-manualSyncBtn.onclick = syncWithServer;
-document.body.appendChild(manualSyncBtn);
-
-setInterval(syncWithServer, SYNC_INTERVAL);

@@ -131,3 +131,64 @@ newQuoteBtn.addEventListener("click", filterQuotes);
 populateCategories();
 createAddQuoteForm();
 filterQuotes();
+
+const syncNotice = document.createElement("div");
+syncNotice.id = "syncNotice";
+document.body.prepend(syncNotice);
+
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+const SYNC_INTERVAL = 15000; // 15 seconds
+
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+
+    // Simulate server quote format
+    return data.slice(0, 5).map(item => ({
+      text: item.title,
+      category: "Server"
+    }));
+  } catch (error) {
+    console.error("Server fetch failed:", error);
+    return [];
+  }
+}
+
+async function syncWithServer() {
+  const serverQuotes = await fetchServerQuotes();
+
+  if (serverQuotes.length === 0) return;
+
+  const localQuotesJSON = JSON.stringify(quotes);
+  const serverQuotesJSON = JSON.stringify(serverQuotes);
+
+  if (localQuotesJSON !== serverQuotesJSON) {
+    // Conflict detected → server wins
+    quotes = serverQuotes;
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+
+    populateCategories();
+    filterQuotes();
+
+    showSyncMessage("⚠️ Data conflict resolved. Server data applied.");
+  }
+}
+
+function showSyncMessage(message) {
+  syncNotice.textContent = message;
+  syncNotice.style.background = "#ffefc1";
+  syncNotice.style.padding = "10px";
+  syncNotice.style.marginBottom = "10px";
+
+  setTimeout(() => {
+    syncNotice.textContent = "";
+  }, 4000);
+}
+
+const manualSyncBtn = document.createElement("button");
+manualSyncBtn.textContent = "Manual Sync with Server";
+manualSyncBtn.onclick = syncWithServer;
+document.body.appendChild(manualSyncBtn);
+
+setInterval(syncWithServer, SYNC_INTERVAL);

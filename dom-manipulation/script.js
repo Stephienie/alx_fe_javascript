@@ -163,17 +163,16 @@ async function syncWithServer() {
   const serverData = JSON.stringify(serverQuotes);
 
   if (localData !== serverData) {
-    // Conflict resolved: server wins
+    // Server takes precedence
     quotes = serverQuotes;
     localStorage.setItem("quotes", JSON.stringify(quotes));
 
     populateCategories();
     filterQuotes();
 
-    showSyncMessage("⚠️ Conflict resolved. Server data applied.");
+    showSyncMessage("Quotes synced with server!");
   }
 
-  // Send local data to server (simulation)
   postQuotesToServer(quotes);
 }
 
@@ -201,5 +200,20 @@ async function postQuotesToServer(quotesData) {
 // ✅ REQUIRED FUNCTION (by name)
 async function syncQuotes() {
   await syncWithServer();
+}
+
+function showSyncMessage(message) {
+  const syncNotice = document.getElementById("syncNotice") || document.createElement("div");
+  syncNotice.id = "syncNotice";
+  syncNotice.textContent = message;
+  syncNotice.style.background = "#e0f7e9";
+  syncNotice.style.padding = "10px";
+  syncNotice.style.marginBottom = "10px";
+
+  document.body.prepend(syncNotice);
+
+  setTimeout(() => {
+    syncNotice.textContent = "";
+  }, 3000);
 }
 

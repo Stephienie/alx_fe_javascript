@@ -177,6 +177,8 @@ async function syncWithServer() {
   postQuotesToServer(quotes);
 }
 
+setInterval(syncQuotes, 15000);
+
 
 async function postQuotesToServer(quotesData) {
   try {
@@ -194,5 +196,10 @@ async function postQuotesToServer(quotesData) {
   } catch (error) {
     console.error("Error posting quotes to server:", error);
   }
+}
+
+// ✅ REQUIRED FUNCTION (by name)
+async function syncQuotes() {
+  await syncWithServer();
 }
 

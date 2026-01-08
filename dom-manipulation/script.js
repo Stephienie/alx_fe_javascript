@@ -162,17 +162,37 @@ async function syncWithServer() {
   const localData = JSON.stringify(quotes);
   const serverData = JSON.stringify(serverQuotes);
 
-  // Conflict detected → server takes precedence
   if (localData !== serverData) {
+    // Conflict resolved: server wins
     quotes = serverQuotes;
     localStorage.setItem("quotes", JSON.stringify(quotes));
 
     populateCategories();
     filterQuotes();
 
-    showSyncMessage("⚠️ Conflict detected. Server data applied.");
+    showSyncMessage("⚠️ Conflict resolved. Server data applied.");
   }
+
+  // Send local data to server (simulation)
+  postQuotesToServer(quotes);
 }
 
-setInterval(syncWithServer, 15000);
+
+async function postQuotesToServer(quotesData) {
+  try {
+    const response = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(quotesData)
+    });
+
+    const result = await response.json();
+    console.log("Quotes successfully posted to server:", result);
+  } catch (error) {
+    console.error("Error posting quotes to server:", error);
+  }
+}
 
